@@ -2,14 +2,14 @@ package org.example.johsmith_comp228lab5;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Main extends Application {
     Connection dbConnection;
@@ -106,6 +106,71 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.setTitle("Player Information");
         primaryStage.show();
+
+        // Button actions for creating players
+        createPlayersButton.setOnAction(event -> createPlayer());
+    }
+
+    private void createPlayer() {
+        try {
+            // Retrieving input data from text fields
+            String firstName = firstNameField.getText();
+            String lastName = lastNameField.getText();
+            String address = addressField.getText();
+            String postalCode = postalCodeField.getText();
+            String province = provinceField.getText();
+            String phoneNumber = phoneNumberField.getText();
+            String gameTitle = gameTitleField.getText();
+            String datePlayed = datePlayedField.getText();
+            String gameScore = gameScoreField.getText();
+
+            // Inserting player information into the database
+            PreparedStatement preparedStatement1 = dbConnection.prepareStatement(
+                    "INSERT INTO PLAYER (PLAYER_ID, FIRST_NAME, LAST_NAME, ADDRESS, POSTAL_CODE, PROVINCE, PHONE_NUMBER) VALUES (player_id_seq.NEXTVAL, ?, ?, ?, ?, ?, ?)");
+            preparedStatement1.setString(1, firstName);
+            preparedStatement1.setString(2, lastName);
+            preparedStatement1.setString(3, address);
+            preparedStatement1.setString(4, postalCode);
+            preparedStatement1.setString(5, province);
+            preparedStatement1.setString(6, phoneNumber);
+            preparedStatement1.executeUpdate();
+
+            // Inserting game information into the database
+            PreparedStatement preparedStatement2 = dbConnection.prepareStatement(
+                    "INSERT INTO GAME (game_id, game_title) VALUES (game_id_seq.NEXTVAL, ?)");
+            preparedStatement2.setString(1, gameTitle);
+            preparedStatement2.executeUpdate();
+
+            // Inserting player-game relationship into the database
+            PreparedStatement preparedStatement3 = dbConnection.prepareStatement(
+                    "INSERT INTO PLAYERANDGAME (PLAYER_GAME_ID, GAME_ID, PLAYER_ID, PLAYING_DATE, SCORE) VALUES (player_game_id_seq.NEXTVAL, game_id_seq.CURRVAL, player_id_seq.CURRVAL, ?, ?)");
+            preparedStatement3.setString(1, datePlayed);
+            preparedStatement3.setString(2, gameScore);
+            preparedStatement3.executeUpdate();
+
+            // Displaying success message and clearing fields
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Player created successfully!", ButtonType.OK);
+            alert.showAndWait();
+            clearFields();
+        } catch (SQLException e) {
+            // Handling database errors
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error creating player!", ButtonType.OK);
+            alert.showAndWait();
+        }
+    }
+
+    private void clearFields() {
+        firstNameField.clear();
+        lastNameField.clear();
+        addressField.clear();
+        postalCodeField.clear();
+        provinceField.clear();
+        phoneNumberField.clear();
+        gameTitleField.clear();
+        gameScoreField.clear();
+        datePlayedField.clear();
+        playerIdField.clear();
     }
 
     public Connection connectToDatabase() {
