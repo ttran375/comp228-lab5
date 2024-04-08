@@ -8,8 +8,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
 public class Main extends Application {
+    Connection dbConnection;
     private TextField firstNameField;
     private TextField lastNameField;
     private TextField addressField;
@@ -23,6 +26,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        dbConnection = connectToDatabase();
         GridPane displayInfoPane = new GridPane();
 
         // Labels for player information
@@ -102,6 +106,21 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.setTitle("Player Information");
         primaryStage.show();
+    }
+
+    public Connection connectToDatabase() {
+        Connection connection = null;
+        try {
+            System.out.println("> Start Program ...");
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+            System.out.println("> Driver Loaded successfully.");
+            connection = DriverManager.getConnection("jdbc:oracle:thin:@199.212.26.208:1521:SQLD", "COMP228_W24_sy_68",
+                    "password");
+            System.out.println("Database connected successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return connection;
     }
 
     public static void main(String[] args) {
