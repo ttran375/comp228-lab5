@@ -116,80 +116,52 @@ public class Main extends Application {
         displayPlayersButton.setOnAction(event -> displayTable());
     }
 
-    private void displayTable() {
+    private void createPlayer() {
         try {
-            // Vector to hold column names and data rows
-            Vector<String> columnNames = new Vector<>();
-            Vector<Vector<Object>> data = new Vector<>();
+            // Retrieving input data from text fields
+            String firstName = firstNameField.getText();
+            String lastName = lastNameField.getText();
+            String address = addressField.getText();
+            String postalCode = postalCodeField.getText();
+            String province = provinceField.getText();
+            String phoneNumber = phoneNumberField.getText();
+            String gameTitle = gameTitleField.getText();
+            String datePlayed = datePlayedField.getText();
+            String gameScore = gameScoreField.getText();
 
-            // Adding column names
-            columnNames.add("Player ID");
-            columnNames.add("Player Name");
-            columnNames.add("Address");
-            columnNames.add("Postal Code");
-            columnNames.add("Province");
-            columnNames.add("Phone Number");
-            columnNames.add("Game Title");
-            columnNames.add("Score");
-            columnNames.add("Date Played");
+            // Inserting player information into the database
+            PreparedStatement createPlayerStatement = dbConnection.prepareStatement(
+                    "INSERT INTO PLAYER (PLAYER_ID, FIRST_NAME, LAST_NAME, ADDRESS, POSTAL_CODE, PROVINCE, PHONE_NUMBER) VALUES (player_id_seq.NEXTVAL, ?, ?, ?, ?, ?, ?)");
+            createPlayerStatement.setString(1, firstName);
+            createPlayerStatement.setString(2, lastName);
+            createPlayerStatement.setString(3, address);
+            createPlayerStatement.setString(4, postalCode);
+            createPlayerStatement.setString(5, province);
+            createPlayerStatement.setString(6, phoneNumber);
+            createPlayerStatement.executeUpdate();
 
-            // Executing SQL query to fetch player information and game details
-            try (Statement stmt = dbConnection.createStatement()) {
-                String query = """
-                        SELECT B.PLAYER_ID,
-                               B.FIRST_NAME || ' ' || B.LAST_NAME AS PLAYER_NAME,
-                               B.ADDRESS,
-                               B.POSTAL_CODE,
-                               B.PROVINCE,
-                               B.PHONE_NUMBER,
-                               C.GAME_TITLE,
-                               A.SCORE,
-                               A.PLAYING_DATE
-                        FROM PLAYERANDGAME A
-                        INNER JOIN PLAYER B
-                        ON A.PLAYER_ID = B.PLAYER_ID
-                        INNER JOIN GAME C
-                        ON A.GAME_ID = C.GAME_ID
-                        ORDER BY B.PLAYER_ID
-                        """;
+            // Inserting game information into the database
+            PreparedStatement createGameStatement = dbConnection.prepareStatement(
+                    "INSERT INTO GAME (game_id, game_title) VALUES (game_id_seq.NEXTVAL, ?)");
+            createGameStatement.setString(1, gameTitle);
+            createGameStatement.executeUpdate();
 
-                try (ResultSet rs = stmt.executeQuery(query)) {
-                    // Iterating through result set and populating data vector
-                    while (rs.next()) {
-                        Vector<Object> row = new Vector<>();
-                        row.add(rs.getString("PLAYER_ID"));
-                        row.add(rs.getString("PLAYER_NAME"));
-                        row.add(rs.getString("ADDRESS"));
-                        row.add(rs.getString("POSTAL_CODE"));
-                        row.add(rs.getString("PROVINCE"));
-                        row.add(rs.getString("PHONE_NUMBER"));
-                        row.add(rs.getString("GAME_TITLE"));
-                        row.add(rs.getString("SCORE"));
-                        row.add(rs.getString("PLAYING_DATE"));
-                        data.add(row);
-                    }
-                }
-            }
+            // Inserting player-game relationship into the database
+            PreparedStatement createPlayerAndGameStatement = dbConnection.prepareStatement(
+                    "INSERT INTO PLAYERANDGAME (PLAYER_GAME_ID, GAME_ID, PLAYER_ID, PLAYING_DATE, SCORE) VALUES (player_game_id_seq.NEXTVAL, game_id_seq.CURRVAL, player_id_seq.CURRVAL, ?, ?)");
+            createPlayerAndGameStatement.setString(1, datePlayed);
+            createPlayerAndGameStatement.setString(2, gameScore);
+            createPlayerAndGameStatement.executeUpdate();
 
-            // Creating table model with data and column names
-            DefaultTableModel model = new DefaultTableModel(data, columnNames);
-
-            // Creating JTable with the model
-            JTable table = new JTable(model);
-            JScrollPane scrollPane = new JScrollPane(table);
-
-            // Creating JFrame to display the table
-            JFrame frame = new JFrame("Player Information");
-            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            frame.add(scrollPane);
-            frame.pack();
-            frame.setVisible(true);
+            // Displaying success message and clearing fields
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Player created successfully!", ButtonType.OK);
+            alert.showAndWait();
+            clearFields();
         } catch (SQLException e) {
             // Handling database errors
             e.printStackTrace();
-            // Displaying error message in case of failure
-            JOptionPane.showMessageDialog(null, "Error fetching data from the database!", "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error creating player!", ButtonType.OK);
+            alert.showAndWait();
         }
     }
 
@@ -266,55 +238,6 @@ public class Main extends Application {
         }
     }
 
-    private void createPlayer() {
-        try {
-            // Retrieving input data from text fields
-            String firstName = firstNameField.getText();
-            String lastName = lastNameField.getText();
-            String address = addressField.getText();
-            String postalCode = postalCodeField.getText();
-            String province = provinceField.getText();
-            String phoneNumber = phoneNumberField.getText();
-            String gameTitle = gameTitleField.getText();
-            String datePlayed = datePlayedField.getText();
-            String gameScore = gameScoreField.getText();
-
-            // Inserting player information into the database
-            PreparedStatement preparedStatement1 = dbConnection.prepareStatement(
-                    "INSERT INTO PLAYER (PLAYER_ID, FIRST_NAME, LAST_NAME, ADDRESS, POSTAL_CODE, PROVINCE, PHONE_NUMBER) VALUES (player_id_seq.NEXTVAL, ?, ?, ?, ?, ?, ?)");
-            preparedStatement1.setString(1, firstName);
-            preparedStatement1.setString(2, lastName);
-            preparedStatement1.setString(3, address);
-            preparedStatement1.setString(4, postalCode);
-            preparedStatement1.setString(5, province);
-            preparedStatement1.setString(6, phoneNumber);
-            preparedStatement1.executeUpdate();
-
-            // Inserting game information into the database
-            PreparedStatement preparedStatement2 = dbConnection.prepareStatement(
-                    "INSERT INTO GAME (game_id, game_title) VALUES (game_id_seq.NEXTVAL, ?)");
-            preparedStatement2.setString(1, gameTitle);
-            preparedStatement2.executeUpdate();
-
-            // Inserting player-game relationship into the database
-            PreparedStatement preparedStatement3 = dbConnection.prepareStatement(
-                    "INSERT INTO PLAYERANDGAME (PLAYER_GAME_ID, GAME_ID, PLAYER_ID, PLAYING_DATE, SCORE) VALUES (player_game_id_seq.NEXTVAL, game_id_seq.CURRVAL, player_id_seq.CURRVAL, ?, ?)");
-            preparedStatement3.setString(1, datePlayed);
-            preparedStatement3.setString(2, gameScore);
-            preparedStatement3.executeUpdate();
-
-            // Displaying success message and clearing fields
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Player created successfully!", ButtonType.OK);
-            alert.showAndWait();
-            clearFields();
-        } catch (SQLException e) {
-            // Handling database errors
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error creating player!", ButtonType.OK);
-            alert.showAndWait();
-        }
-    }
-
     private void clearFields() {
         firstNameField.clear();
         lastNameField.clear();
@@ -326,6 +249,83 @@ public class Main extends Application {
         gameScoreField.clear();
         datePlayedField.clear();
         playerIdField.clear();
+    }
+
+    private void displayTable() {
+        try {
+            // Vector to hold column names and data rows
+            Vector<String> columnNames = new Vector<>();
+            Vector<Vector<Object>> data = new Vector<>();
+
+            // Adding column names
+            columnNames.add("Player ID");
+            columnNames.add("Player Name");
+            columnNames.add("Address");
+            columnNames.add("Postal Code");
+            columnNames.add("Province");
+            columnNames.add("Phone Number");
+            columnNames.add("Game Title");
+            columnNames.add("Score");
+            columnNames.add("Date Played");
+
+            // Executing SQL query to fetch player information and game details
+            try (Statement stmt = dbConnection.createStatement()) {
+                String query = """
+                        SELECT B.PLAYER_ID,
+                               B.FIRST_NAME || ' ' || B.LAST_NAME AS PLAYER_NAME,
+                               B.ADDRESS,
+                               B.POSTAL_CODE,
+                               B.PROVINCE,
+                               B.PHONE_NUMBER,
+                               C.GAME_TITLE,
+                               A.SCORE,
+                               A.PLAYING_DATE
+                        FROM PLAYERANDGAME A
+                        INNER JOIN PLAYER B
+                        ON A.PLAYER_ID = B.PLAYER_ID
+                        INNER JOIN GAME C
+                        ON A.GAME_ID = C.GAME_ID
+                        ORDER BY B.PLAYER_ID
+                        """;
+
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    // Iterating through result set and populating data vector
+                    while (rs.next()) {
+                        Vector<Object> row = new Vector<>();
+                        row.add(rs.getString("PLAYER_ID"));
+                        row.add(rs.getString("PLAYER_NAME"));
+                        row.add(rs.getString("ADDRESS"));
+                        row.add(rs.getString("POSTAL_CODE"));
+                        row.add(rs.getString("PROVINCE"));
+                        row.add(rs.getString("PHONE_NUMBER"));
+                        row.add(rs.getString("GAME_TITLE"));
+                        row.add(rs.getString("SCORE"));
+                        row.add(rs.getString("PLAYING_DATE"));
+                        data.add(row);
+                    }
+                }
+            }
+
+            // Creating table model with data and column names
+            DefaultTableModel model = new DefaultTableModel(data, columnNames);
+
+            // Creating JTable with the model
+            JTable table = new JTable(model);
+            JScrollPane scrollPane = new JScrollPane(table);
+
+            // Creating JFrame to display the table
+            JFrame frame = new JFrame("Player Information");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.add(scrollPane);
+            frame.pack();
+            frame.setVisible(true);
+        } catch (SQLException e) {
+            // Handling database errors
+            e.printStackTrace();
+            // Displaying error message in case of failure
+            JOptionPane.showMessageDialog(null, "Error fetching data from the database!", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public Connection connectToDatabase() {
