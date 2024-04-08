@@ -107,8 +107,82 @@ public class Main extends Application {
         primaryStage.setTitle("Player Information");
         primaryStage.show();
 
-        // Button actions for creating players
+        // Button actions for creating and updating players
         createPlayersButton.setOnAction(event -> createPlayer());
+        updateButton.setOnAction(event -> updatePlayer());
+    }
+
+    private void updatePlayer() {
+        try {
+            // Retrieving input data from text fields
+            String playerId = playerIdField.getText();
+            String firstName = firstNameField.getText();
+            String lastName = lastNameField.getText();
+            String address = addressField.getText();
+            String postalCode = postalCodeField.getText();
+            String province = provinceField.getText();
+            String phoneNumber = phoneNumberField.getText();
+            String gameTitle = gameTitleField.getText();
+            String datePlayed = datePlayedField.getText();
+            String gameScore = gameScoreField.getText();
+
+            // Disabling auto-commit mode for transaction management
+            dbConnection.setAutoCommit(false);
+
+            // Updating player information in the database
+            PreparedStatement updatePlayerStatement = dbConnection.prepareStatement(
+                    "UPDATE PLAYER SET FIRST_NAME = ?, LAST_NAME = ?, ADDRESS = ?, POSTAL_CODE = ?, PROVINCE = ?, PHONE_NUMBER = ? WHERE PLAYER_ID = ?");
+            updatePlayerStatement.setString(1, firstName);
+            updatePlayerStatement.setString(2, lastName);
+            updatePlayerStatement.setString(3, address);
+            updatePlayerStatement.setString(4, postalCode);
+            updatePlayerStatement.setString(5, province);
+            updatePlayerStatement.setString(6, phoneNumber);
+            updatePlayerStatement.setString(7, playerId);
+            updatePlayerStatement.executeUpdate();
+
+            // Updating game title in the database for the corresponding player
+            PreparedStatement updateGameStatement = dbConnection.prepareStatement(
+                    "UPDATE GAME SET GAME_TITLE = ? WHERE GAME_ID IN (SELECT A.GAME_ID FROM PLAYERANDGAME A WHERE A.PLAYER_ID = ?)");
+            updateGameStatement.setString(1, gameTitle);
+            updateGameStatement.setString(2, playerId);
+            updateGameStatement.executeUpdate();
+
+            // Updating player-game relationship information in the database
+            PreparedStatement updatePlayerAndGameStatement = dbConnection.prepareStatement(
+                    "UPDATE PLAYERANDGAME SET PLAYING_DATE = ?, SCORE = ? WHERE PLAYER_ID = ?");
+            updatePlayerAndGameStatement.setString(1, datePlayed);
+            updatePlayerAndGameStatement.setString(2, gameScore);
+            updatePlayerAndGameStatement.setString(3, playerId);
+            updatePlayerAndGameStatement.executeUpdate();
+
+            // Committing the transaction
+            dbConnection.commit();
+
+            // Displaying success message and clearing fields
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Player updated successfully!", ButtonType.OK);
+            alert.showAndWait();
+            clearFields();
+        } catch (SQLException e) {
+            // Handling database errors
+            e.printStackTrace();
+            try {
+                // Rolling back the transaction in case of failure
+                dbConnection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            // Displaying error message
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error updating player!", ButtonType.OK);
+            alert.showAndWait();
+        } finally {
+            try {
+                // Reverting back to auto-commit mode
+                dbConnection.setAutoCommit(true);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     private void createPlayer() {
