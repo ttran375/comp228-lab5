@@ -6,10 +6,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+
+import javax.swing.*;
+
+import java.sql.*;
+import java.util.Vector;
+
+import javax.swing.table.DefaultTableModel;
 
 public class Main extends Application {
     Connection dbConnection;
@@ -107,9 +110,87 @@ public class Main extends Application {
         primaryStage.setTitle("Player Information");
         primaryStage.show();
 
-        // Button actions for creating and updating players
+        // Button actions for creating, updating, and displaying players
         createPlayersButton.setOnAction(event -> createPlayer());
         updateButton.setOnAction(event -> updatePlayer());
+        displayPlayersButton.setOnAction(event -> displayTable());
+    }
+
+    private void displayTable() {
+        try {
+            // Vector to hold column names and data rows
+            Vector<String> columnNames = new Vector<>();
+            Vector<Vector<Object>> data = new Vector<>();
+
+            // Adding column names
+            columnNames.add("Player ID");
+            columnNames.add("Player Name");
+            columnNames.add("Address");
+            columnNames.add("Postal Code");
+            columnNames.add("Province");
+            columnNames.add("Phone Number");
+            columnNames.add("Game Title");
+            columnNames.add("Score");
+            columnNames.add("Date Played");
+
+            // Executing SQL query to fetch player information and game details
+            try (Statement stmt = dbConnection.createStatement()) {
+                String query = """
+                        SELECT B.PLAYER_ID,
+                               B.FIRST_NAME || ' ' || B.LAST_NAME AS PLAYER_NAME,
+                               B.ADDRESS,
+                               B.POSTAL_CODE,
+                               B.PROVINCE,
+                               B.PHONE_NUMBER,
+                               C.GAME_TITLE,
+                               A.SCORE,
+                               A.PLAYING_DATE
+                        FROM PLAYERANDGAME A
+                        INNER JOIN PLAYER B
+                        ON A.PLAYER_ID = B.PLAYER_ID
+                        INNER JOIN GAME C
+                        ON A.GAME_ID = C.GAME_ID
+                        ORDER BY B.PLAYER_ID
+                        """;
+
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    // Iterating through result set and populating data vector
+                    while (rs.next()) {
+                        Vector<Object> row = new Vector<>();
+                        row.add(rs.getString("PLAYER_ID"));
+                        row.add(rs.getString("PLAYER_NAME"));
+                        row.add(rs.getString("ADDRESS"));
+                        row.add(rs.getString("POSTAL_CODE"));
+                        row.add(rs.getString("PROVINCE"));
+                        row.add(rs.getString("PHONE_NUMBER"));
+                        row.add(rs.getString("GAME_TITLE"));
+                        row.add(rs.getString("SCORE"));
+                        row.add(rs.getString("PLAYING_DATE"));
+                        data.add(row);
+                    }
+                }
+            }
+
+            // Creating table model with data and column names
+            DefaultTableModel model = new DefaultTableModel(data, columnNames);
+
+            // Creating JTable with the model
+            JTable table = new JTable(model);
+            JScrollPane scrollPane = new JScrollPane(table);
+
+            // Creating JFrame to display the table
+            JFrame frame = new JFrame("Player Information");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.add(scrollPane);
+            frame.pack();
+            frame.setVisible(true);
+        } catch (SQLException e) {
+            // Handling database errors
+            e.printStackTrace();
+            // Displaying error message in case of failure
+            JOptionPane.showMessageDialog(null, "Error fetching data from the database!", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void updatePlayer() {
