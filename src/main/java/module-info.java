@@ -1,10 +1,10 @@
-module org.example.johsmith_comp228lab5 {
+module org.example.comp228lab5 {
     requires javafx.controls;
     requires javafx.fxml;
-    requires java.sql;
     requires java.desktop;
+    requires java.sql;
 
 
-    opens org.example.johsmith_comp228lab5 to javafx.fxml;
-    exports org.example.johsmith_comp228lab5;
+    opens org.example.comp228lab5 to javafx.fxml;
+    exports org.example.comp228lab5;
 }

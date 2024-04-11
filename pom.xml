@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.example</groupId>
-  <artifactId>JohSmith_COMP228Lab5</artifactId>
+  <artifactId>comp228-lab5</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <name>JohSmith_COMP228Lab5</name>
+  <name>comp228-lab5</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -58,7 +58,7 @@
             <!-- Default configuration for running with: mvn clean javafx:run -->
             <id>default-cli</id>
             <configuration>
-              <mainClass>org.example.johsmith_comp228lab5/org.example.johsmith_comp228lab5.HelloApplication</mainClass>
+              <mainClass>org.example.comp228lab5/org.example.comp228lab5.HelloApplication</mainClass>
               <launcher>app</launcher>
               <jlinkZipName>app</jlinkZipName>
               <jlinkImageName>app</jlinkImageName>

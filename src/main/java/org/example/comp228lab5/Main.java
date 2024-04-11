@@ -1,4 +1,4 @@
-package org.example.johsmith_comp228lab5;
+package org.example.comp228lab5;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
