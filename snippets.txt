@@ -1,0 +1,6 @@
+Username: COMP228_W24_sy_x
+password: password
+Hostname on campus: oracle1.centennialcollege.ca
+Hostname for off campus connection: 199.212.26.208
+port: 1521
+SID: SQLD
